@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation , Outlet} from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { 
   Sidebar, 
@@ -152,12 +152,14 @@ const SidebarNav: React.FC = () => {
   );
 };
 
-const SidebarWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+const SidebarWrapper: React.FC = () => {
   return (
     <SidebarProvider defaultOpen={true}>
       <div className="flex min-h-screen w-full">
         <SidebarNav />
-        <main className="flex-1">{children}</main>
+        <main className="flex-1">
+          <Outlet />
+        </main>
       </div>
     </SidebarProvider>
   );
