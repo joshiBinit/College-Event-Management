@@ -1,20 +1,61 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import LoginForm from '@/components/auth/LoginForm';
+
 import { useAuth } from '@/context/AuthContext';
-import { Calendar } from 'lucide-react';
+
 import { FaFacebookF, FaGooglePlusG, FaLinkedinIn} from 'react-icons/fa';
+import { Input } from '@/components/ui/input';
+import { UserRole } from '@/types';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 const Login: React.FC = () => {
   const { isAuthenticated } = useAuth();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [name, setName] = useState('');
+  const [role, setRole] = useState<UserRole>('student');
+  const { login } = useAuth();
+  const { register } = useAuth();
   const navigate = useNavigate();
   const [isRightPanelActive, setIsRightPanelActive] = useState(false);
 
-  const handleLogin =(e:React.FormEvent)=>{
-    e.preventDefault();
-    navigate("/index");
-  }
+  const handleSignIn = async (e: React.FormEvent) => {
+      e.preventDefault();
+      setLoading(true);
+      
+      try {
+        await login(email, password);
+        navigate('/dashboard');
+      } catch (error) {
+        console.error('Login failed:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const handleSignUp = async (e: React.FormEvent) => {
+        e.preventDefault();
+        
+        if (password !== confirmPassword) {
+          alert('Passwords do not match');
+          return;
+        }
+        
+        setLoading(true);
+        
+        try {
+          await register(name, email, password, role);
+          navigate('/dashboard');
+        } catch (error) {
+          console.error('Registration failed:', error);
+        } finally {
+          setLoading(false);
+        }
+      };
 
   const handleSignUpClick = () => {
     setIsRightPanelActive(true);
@@ -38,23 +79,64 @@ const Login: React.FC = () => {
         {/* Sign Up Form */}
         <div className={`absolute top-0 h-full transition-all duration-600 ease-in-out left-0 w-1/2 opacity-0 z-10 ${isRightPanelActive ? 'translate-x-full opacity-100 z-50' : ''}`}>
           <form className="bg-white flex items-center justify-center flex-col p-0 sm:p-12 h-full text-center">
-            <h1 className="font-bold m-0">Create Account</h1>
-            <div className="my-5">
-              <a href="#" className="border border-gray-300 rounded-full inline-flex justify-center items-center mx-1 h-10 w-10">
-                <FaFacebookF />
-              </a>
-              <a href="#" className="border border-gray-300 rounded-full inline-flex justify-center items-center mx-1 h-10 w-10">
-                <FaGooglePlusG />
-              </a>
-              <a href="#" className="border border-gray-300 rounded-full inline-flex justify-center items-center mx-1 h-10 w-10">
-                <FaLinkedinIn />
-              </a>
-            </div>
-            <span className="text-xs">or use your email for registration</span>
-            <input type="text" placeholder="Name" className="bg-gray-200 border-none p-3 my-2 w-full" />
-            <input type="email" placeholder="Email" className="bg-gray-200 border-none p-3 my-2 w-full" />
-            <input type="password" placeholder="Password" className="bg-gray-200 border-none p-3 my-2 w-full" />
-            <button className="rounded-3xl border border-red-500 bg-red-500 text-white text-xs font-bold py-3 px-11 uppercase tracking-wider mt-4">
+            <h1 className="text-4xl md:text-5xl font-extrabold text-gray-800 tracking-tight mb-4">Create Account</h1>
+            
+            <Input
+                        id="name"
+                        className="bg-gray-200 border-none p-3 my-2 w-full"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        placeholder="Name"
+                        required
+                      />
+            <Input
+                        id="email"
+                        type="email"
+                        className="bg-gray-200 border-none p-3 my-2 w-full"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="Email"
+                        required
+                      />
+            <Input
+                        id="password"
+                        type="password"
+                        className="bg-gray-200 border-none p-3 my-2 w-full"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="Password"
+                        required
+                        minLength={8}
+                      />
+            <Input
+                          id="confirmPassword"
+                          type="password"
+                          className="bg-gray-200 border-none p-3 my-2 w-full"
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          placeholder="Confirm Password"
+                          required
+                      />
+            <div className="bg-gray-200 p-3 my-2 w-full rounded-md">
+  
+  <RadioGroup
+    defaultValue="student"
+    value={role}
+    onValueChange={(value) => setRole(value as UserRole)}
+    className="mt-2 space-y-2"
+  >
+    <div className="flex items-center space-x-2">
+      <RadioGroupItem value="student" id="student" />
+      <Label htmlFor="student" className="text-sm text-gray-800">Student</Label>
+    </div>
+    <div className="flex items-center space-x-2">
+      <RadioGroupItem value="admin" id="admin" />
+      <Label htmlFor="admin" className="text-sm text-gray-800">Administrator</Label>
+    </div>
+  </RadioGroup>
+</div>
+
+            <button onClick={handleSignUp} className="rounded-3xl border border-red-500 bg-red-500 text-white text-xs font-bold py-3 px-11 uppercase tracking-wider mt-4" disabled={loading}>
               Sign Up
             </button>
           </form>
@@ -63,25 +145,39 @@ const Login: React.FC = () => {
         {/* Sign In Form */}
         <div className={`absolute top-0 h-full transition-all duration-600 ease-in-out left-0 w-1/2 z-20 ${isRightPanelActive ? 'translate-x-full' : ''}`}>
           <form className="bg-white flex items-center justify-center flex-col p-0 sm:p-12 h-full text-center">
-            <h1 className="font-bold m-0">Sign in</h1>
-            <div className="my-5">
-              <a href="#" className="border border-gray-300 rounded-full inline-flex justify-center items-center mx-1 h-10 w-10">
-                <FaFacebookF />
-              </a>
-              <a href="#" className="border border-gray-300 rounded-full inline-flex justify-center items-center mx-1 h-10 w-10">
-                <FaGooglePlusG />
-              </a>
-              <a href="#" className="border border-gray-300 rounded-full inline-flex justify-center items-center mx-1 h-10 w-10">
-                <FaLinkedinIn />
-              </a>
-            </div>
-            <span className="text-xs">or use your account</span>
-            <input type="email" placeholder="Email" className="bg-gray-200 border-none p-3 my-2 w-full" />
-            <input type="password" placeholder="Password" className="bg-gray-200 border-none p-3 my-2 w-full" />
+            <h1 className="text-4xl md:text-5xl font-extrabold text-gray-800 tracking-tight mb-4">Sign in</h1>
+
+            
+            
+            <Input
+                        id="email"
+                        type="email"
+                        className="bg-gray-200 border-none p-3 my-2 w-full"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="you@college.edu"
+                        required
+                      />
+            <Input
+                        id="password"
+                        type="password"
+                        className="bg-gray-200 border-none p-3 my-2 w-full"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="••••••••"
+                        required
+                      />
             <a href="#" className="text-gray-700 text-sm my-3">Forgot your password?</a>
-            <button onClick={handleLogin}className="rounded-3xl border border-red-500 bg-red-500 text-white text-xs font-bold py-3 px-11 uppercase tracking-wider mt-4">
-              Sign In
+            <button onClick={handleSignIn}className="rounded-3xl border border-red-500 bg-red-500 text-white text-xs font-bold py-3 px-11  tracking-wider mt-4" disabled={loading}>
+              {loading ? 'Logging in...' : 'Sign In'}
             </button>
+            <div className="border-t pt-4">
+              <p className="text-xs text-center text-muted-foreground">
+                Demo credentials: <br />
+                Admin: admin@college.edu / password <br />
+                Student: student@college.edu / password
+              </p>
+            </div>
           </form>
         </div>
 

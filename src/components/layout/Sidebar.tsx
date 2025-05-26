@@ -37,7 +37,7 @@ const SidebarNav: React.FC = () => {
       <SidebarHeader>
         <div className="flex items-center gap-2 px-4">
           <Calendar className="h-6 w-6 text-college-600" />
-          <span className="font-bold text-lg">CampusEvents</span>
+          <span className="font-bold text-lg">Campus Connect</span>
         </div>
       </SidebarHeader>
       
